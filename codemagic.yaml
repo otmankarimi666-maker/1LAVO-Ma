@@ -6,12 +6,23 @@ workflows:
     environment:
       flutter: stable
     scripts:
+      - name: Find project root
+        script: |
+          PROJECT_ROOT=$(find . -name "pubspec.yaml" | head -1 | xargs dirname)
+          echo "PROJECT_ROOT=$PROJECT_ROOT" >> $CM_ENV
+          echo "Found at $PROJECT_ROOT"
+          ls -la $PROJECT_ROOT
       - name: Get packages
-        script: flutter pub get
+        script: |
+          cd $PROJECT_ROOT
+          flutter pub get
       - name: Build APK
-        script: flutter build apk --release
+        script: |
+          cd $PROJECT_ROOT
+          flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
+      - $PROJECT_ROOT/build/app/outputs/flutter-apk/app-release.apk
   ios-workflow:
     name: 1LAVO iOS
     max_build_duration: 60
@@ -19,9 +30,17 @@ workflows:
     environment:
       flutter: stable
     scripts:
+      - name: Find project root
+        script: |
+          PROJECT_ROOT=$(find . -name "pubspec.yaml" | head -1 | xargs dirname)
+          echo "PROJECT_ROOT=$PROJECT_ROOT" >> $CM_ENV
       - name: Get packages
-        script: flutter pub get
+        script: |
+          cd $PROJECT_ROOT
+          flutter pub get
       - name: Build iOS
-        script: flutter build ios --release --no-codesign
+        script: |
+          cd $PROJECT_ROOT
+          flutter build ios --release --no-codesign
     artifacts:
       - build/ios/iphoneos/*.app
