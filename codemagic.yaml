@@ -6,23 +6,25 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Find project root
+      - name: Fix project location
         script: |
-          PROJECT_ROOT=$(find . -name "pubspec.yaml" | head -1 | xargs dirname)
-          echo "PROJECT_ROOT=$PROJECT_ROOT" >> $CM_ENV
-          echo "Found at $PROJECT_ROOT"
-          ls -la $PROJECT_ROOT
+          echo "Listing root:"
+          ls -la
+          if [ ! -f pubspec.yaml ]; then
+            FOUND=$(find . -name "pubspec.yaml" | head -1)
+            echo "Found pubspec at: $FOUND"
+            DIR=$(dirname "$FOUND")
+            echo "Moving files from $DIR to root..."
+            cp -r $DIR/* . 2>/dev/null || true
+            cp -r $DIR/.* . 2>/dev/null || true
+            ls -la
+          fi
       - name: Get packages
-        script: |
-          cd $PROJECT_ROOT
-          flutter pub get
+        script: flutter pub get
       - name: Build APK
-        script: |
-          cd $PROJECT_ROOT
-          flutter build apk --release
+        script: flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
-      - $PROJECT_ROOT/build/app/outputs/flutter-apk/app-release.apk
   ios-workflow:
     name: 1LAVO iOS
     max_build_duration: 60
@@ -30,17 +32,17 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Find project root
+      - name: Fix project location
         script: |
-          PROJECT_ROOT=$(find . -name "pubspec.yaml" | head -1 | xargs dirname)
-          echo "PROJECT_ROOT=$PROJECT_ROOT" >> $CM_ENV
+          if [ ! -f pubspec.yaml ]; then
+            FOUND=$(find . -name "pubspec.yaml" | head -1)
+            DIR=$(dirname "$FOUND")
+            cp -r $DIR/* . 2>/dev/null || true
+            cp -r $DIR/.* . 2>/dev/null || true
+          fi
       - name: Get packages
-        script: |
-          cd $PROJECT_ROOT
-          flutter pub get
+        script: flutter pub get
       - name: Build iOS
-        script: |
-          cd $PROJECT_ROOT
-          flutter build ios --release --no-codesign
+        script: flutter build ios --release --no-codesign
     artifacts:
       - build/ios/iphoneos/*.app
